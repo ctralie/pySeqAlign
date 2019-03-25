@@ -54,4 +54,4 @@ def swconstrained(CSM, match = 1, mismatch = -1, gapopen = -0.5, gapext = -0.7):
             D[i, j] = np.max(np.array([d1, d2, d3, 0.0]))
             if (D[i, j] > maxD):
                 maxD = D[i, j]
-    return (maxD, D)
+    return maxD

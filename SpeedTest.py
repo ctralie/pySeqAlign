@@ -1,29 +1,37 @@
-import PurePython as SA
-import pySeqAlign as SAC
+from PurePython import swconstrained as swnumba
+from pySeqAlign import swconstrained as swcython
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.io as sio
-import time
+import timeit
 import sys
+
+def getRandomCSM(N, M):
+    D = np.random.rand(N, M)
+    D = D < 0.1
+    D = np.array(D, dtype='double')
+    return D
+
+np.random.seed(1)
+D = getRandomCSM(1000, 1000)
 
 def compareTimes():
     """
     Show how much raw C saves time wise with a double for loop
     """
-    np.random.seed(1)
-    D = np.random.rand(1000, 1000)
-    D = D < 0.1
-    D = np.array(D, dtype='double')
+    reps = 1000
+    # Run numba code once so it compiles
+    swnumba(getRandomCSM(10, 10))
+    
+    # Run cython code
+    cytime = timeit.timeit("swcython(D.flatten(), D.shape[0], D.shape[1])", number=reps, globals=globals())
+    cyans = swcython(D.flatten(), D.shape[0], D.shape[1])
 
-    start = time.time()
-    ans = SAC.swconstrained(D.flatten(), D.shape[0], D.shape[1])
-    end = time.time()
-    print("Time elapsed C: %g seconds, ans = %g"%(end-start, ans))
+    nbtime = timeit.timeit("swnumba(D)", number=reps, globals=globals())
+    nbans = swnumba(D)
 
-    start = time.time()
-    ans = SA.swconstrained(D)[0]
-    end = time.time()
-    print("Time elapsed raw python: %g seconds, ans = %g"%(end - start, ans))
+    print("Cython Time: %.3g, ans=%.3g"%(cytime, cyans))
+    print("Numba  Time: %.3g, ans=%.3g"%(nbtime, nbans))
 
 if __name__ == "__main__":
     compareTimes()
